@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+venv/
+*.task
+*.mp4
+plot.png
+result.json
+samples.csv

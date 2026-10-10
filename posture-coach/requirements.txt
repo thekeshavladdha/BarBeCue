@@ -1,0 +1,17 @@
+# BarBeCue — base requirements
+# Python 3.10-3.12 only, prefer 3.11 (MediaPipe wheels lag newest Python)
+# python -m venv venv | venv\Scripts\activate (Windows) | pip install -r requirements.txt
+
+mediapipe
+opencv-python
+numpy
+pillow
+
+# Optional extras (install only as needed):
+# ultralytics            # YOLO-Pose nano compare (AGPL-3.0 copyleft, note if publishing)
+# rtmlib                 # RTMPose-s lightweight inference
+# onnxruntime            # RTMPose ONNX backend
+# streamlit              # browser UI alternative (needs WebRTC setup)
+# streamlit-webrtc       # browser video loop
+# pyttsx3                # voice coaching
+# matplotlib             # optional: required only for plot_angle.py PNG/PDF output

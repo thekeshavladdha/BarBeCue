@@ -6,6 +6,7 @@ mediapipe
 opencv-python
 numpy
 pillow
+flask  # web dashboard (posture-coach/web/server.py)
 
 # Optional extras (install only as needed):
 # ultralytics            # YOLO-Pose nano compare (AGPL-3.0 copyleft, note if publishing)

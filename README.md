@@ -27,10 +27,18 @@ curl.exe -L -o models/pose_landmarker_full.task "https://storage.googleapis.com/
 python test_camera.py            # raw camera check (indices 0 -> 1 -> 2)
 python src/app.py                # live coach (default: Auto posture)
 python src/app.py --exercise Squat --lenient
+python web/server.py             # web dashboard at http://127.0.0.1:5000
+python web/server.py --exercise Squat --port 5000
 python evaluate.py --labels data/labels.csv --backend mediapipe --output result.json
 python plot_angle.py --video data/squat_p01_good.mp4 --backend mediapipe --csv data/squat_angles.csv
 python bench.py --backends mediapipe --frames 60
 ```
+
+Exercises live in muscle-group categories (same list in the desktop
+dropdowns and the web sidebar): Legs (Squat, Lunge, Glute bridge), Chest
+(Push-up, Knee push-up), Biceps (Bicep curl), Back (Bent-over row, Superman
+hold), Shoulders (Shoulder press), Abs (Plank hold, Hollow hold), Posture
+(Auto posture, Desk posture).
 
 `Auto posture` (default) detects sitting vs standing and coaches that scenario:
 upright `Good form`, slouch/chin/shake hints, good-posture seconds. Press

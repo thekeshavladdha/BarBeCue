@@ -20,7 +20,7 @@ import cv2
 from pose_estimator import create_backend
 from smoothing import EMA, AngleSmoother
 from geometry import pick_side, visible_ok, face_offset_angle, compute_metrics
-from exercises import EXERCISES, list_exercises
+from exercises import EXERCISES, list_exercises, list_categories, exercises_in
 from rep_counter import RepCounter
 from feedback import Feedback, raw_violations
 from posture import ScenarioClassifier, LegShakeDetector, SHAKE_MSG
@@ -543,7 +543,11 @@ def main():
     top = ttk.Frame(root, padding=6)
     top.pack(fill="x")
     ttk.Label(top, text="Exercise:").pack(side="left")
-    combo = ttk.Combobox(top, values=list_exercises(), state="readonly", width=16)
+    cat_combo = ttk.Combobox(top, values=list_categories(), state="readonly", width=10)
+    _start_cat = EXERCISES[args.exercise].get("category", "Posture")
+    cat_combo.set(_start_cat)
+    cat_combo.pack(side="left", padx=(0, 4))
+    combo = ttk.Combobox(top, values=exercises_in(_start_cat), state="readonly", width=16)
     combo.set(state.name)
     combo.pack(side="left", padx=6)
     ttk.Label(top, text="Profile:").pack(side="left")
@@ -583,7 +587,14 @@ def main():
         state.set_profile(prof_combo.get())
         hint.config(text=hint_for(state.cfg))
 
+    def on_category(_e=None):
+        names = exercises_in(cat_combo.get())
+        combo.config(values=names)
+        combo.set(names[0])
+        on_select()
+
     combo.bind("<<ComboboxSelected>>", on_select)
+    cat_combo.bind("<<ComboboxSelected>>", on_category)
     prof_combo.bind("<<ComboboxSelected>>", on_profile)
 
     def tick():

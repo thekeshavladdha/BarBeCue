@@ -5,6 +5,7 @@ Live posture detection + rep counter. Python + OpenCV + MediaPipe, CPU-only, off
 ## Layout
 
 - `posture-coach/src/` — app code: `app.py` (Tkinter loop + `CoachState`), `geometry.py`, `exercises.py`, `rep_counter.py`, `feedback.py`, `posture.py`, `smoothing.py`, `pose_estimator.py`
+- `posture-coach/web/` — browser dashboard (`server.py` Flask + MJPEG, `templates/`, `static/`); same `CoachState` pipeline, sidebar by muscle group, session logbook
 - `posture-coach/` root scripts: `test_camera.py`, `evaluate.py`, `plot_angle.py`, `bench.py`, `requirements.txt`
 - `posture-coach/data/labels.csv` — labelled-clip metadata (currently header-only, no clips)
 - `posture-coach/models/pose_landmarker_full.task` — MediaPipe model asset (git-ignored, must exist locally)
@@ -43,7 +44,7 @@ Per-frame (`CoachState.step()`, GUI-independent and unit-testable):
 - `CoachState` in `src/app.py` is the shared live + offline path. `evaluate.py` reuses it. Keep it GUI-free.
 - Backends (`pose_estimator.py`) all return `{name: (x_px, y_px, visibility)}` in **pixels, not normalized**. MediaPipe = default (33-pt); YOLO-Pose = optional 17-pt COCO, largest bbox wins; RTMPose = guarded stub (not wired); `DummyPose` (no person) / `StaticStandingPose` (synthetic) for tests.
 - `geometry.py`: pure functions, no camera/model/UI state. Missing landmarks → safe defaults, but callers must gate on visibility first.
-- `exercises.py`: single config center (`EXERCISES` dict). Add exercises there, never with conditionals in `app.py`.
+- `exercises.py`: single config center (`EXERCISES` dict). Add exercises there, never with conditionals in `app.py`. Every entry carries `category` (Legs/Chest/Biceps/Back/Shoulders/Abs/Posture); `list_categories()` + `exercises_in()` drive both the Tkinter dropdowns and the web sidebar.
 - `rep_counter.py`: hysteresis state machine (REST/MOVING/PEAK, separate start/end thresholds, 0.5s min interval, partial-rep events).
 - `feedback.py`: `raw_violations()` (instant, used for strict gating) vs `Feedback.update()` (debounce ~0.6s, hold ~1.5s, sort by severity, max 2 msgs). Both accept `phase`; rules with `phase="descending"` fire mid-rep on the way down only.
 - Strict-form counting is default ON: severity >= 2 faults persisting >= 0.3s

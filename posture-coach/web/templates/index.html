@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BarBeCue — training</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="wordmark">BarBeCue</div>
+  <div class="sessionline" id="sessionline">starting…</div>
+</header>
+
+<main class="layout">
+  <nav class="sidebar" aria-label="Exercises" id="sidebar"></nav>
+
+  <section class="stage">
+    <figure class="feed">
+      <img id="feed" src="/video_feed" alt="Live coached camera feed">
+    </figure>
+
+    <div class="tally" aria-live="polite">
+      <div class="tally-main" id="tally">REPS 0</div>
+      <div class="tally-sub" id="tallysub">REST</div>
+    </div>
+
+    <ul class="cues" id="cues"></ul>
+
+    <div class="controls">
+      <div class="field">
+        <label for="profile">Profile</label>
+        <select id="profile"></select>
+      </div>
+      <div class="buttons">
+        <button type="button" id="btn-reset">Reset set</button>
+        <button type="button" id="btn-calibrate">Calibrate</button>
+        <button type="button" id="btn-log" class="primary">Log set</button>
+      </div>
+    </div>
+    <p class="hint" id="hint"></p>
+
+    <section class="logbook" aria-label="Session logbook">
+      <h2>Logbook</h2>
+      <table id="logtable">
+        <thead>
+          <tr><th scope="col">Time</th><th scope="col">Exercise</th>
+              <th scope="col">Good</th><th scope="col">Bad</th><th scope="col">Hold</th></tr>
+        </thead>
+        <tbody id="logbody"></tbody>
+      </table>
+      <p class="empty" id="logempty">No sets logged yet. Finish a set, then Log set.</p>
+    </section>
+  </section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

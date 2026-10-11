@@ -27,7 +27,8 @@ import cv2
 from pose_estimator import create_backend
 
 WORK_W, WORK_H = 960, 540
-REPS_EXERCISES = {"Squat", "Lunge", "Push-up", "Bicep curl", "Shoulder press"}
+REPS_EXERCISES = {"Squat", "Lunge", "Glute bridge", "Push-up", "Knee push-up",
+                   "Bicep curl", "Bent-over row", "Shoulder press"}
 
 __all__ = [
     "evaluate_clip", "_result_for_label", "_summary", "read_labels",

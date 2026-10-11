@@ -6,3 +6,7 @@ venv/
 plot.png
 result.json
 samples.csv
+*.docx
+*.pptx
+report.pdf
+posture-coach/explainer.md

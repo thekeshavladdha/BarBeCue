@@ -3,10 +3,12 @@ __pycache__/
 venv/
 *.task
 *.mp4
-plot.png
+*.png
 result.json
 samples.csv
 *.docx
 *.pptx
+*.log
 report.pdf
+SIDE_BY_SIDE.md
 posture-coach/explainer.md

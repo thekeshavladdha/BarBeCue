@@ -36,7 +36,37 @@ python bench.py --backends mediapipe --frames 60
 upright `Good form`, slouch/chin/shake hints, good-posture seconds. Press
 `Calibrate` (or `C`) while in your best posture to zero thresholds to your
 body + camera. Exercise sets count strict-form reps (bad-form full cycles show
-`No rep - <hint>` instead of counting); `--lenient` restores depth-only counting.
+`No rep - <hint>` and add to the BAD tally instead of counting); `--lenient`
+restores depth-only counting. Squat/Lunge offer Beginner/Pro profiles
+(Pro = deeper + stricter knees); `M` toggles spoken rep cues.
+
+## How counting works
+
+Rep state machine (hysteresis — separate start/end thresholds, no single line):
+
+```text
+REST --angle leaves rest zone--> MOVING --angle reaches end zone--> PEAK
+ ^                                                              |
+ +----------------angle returns to rest, min 0.5s since last rep-+
+         PEAK -> REST emits: rep (clean) | bad_rep (sev>=2 fault
+         persisted >= 0.3s mid-cycle -> counted in BAD tally) |
+         MOVING -> REST without PEAK (excursion > 20 deg) emits: partial
+         ("Go lower" / "Full range" flash)
+```
+
+Form faults of severity 2–3 must persist 0.3s (not one frame) to kill a rep;
+severity-1 tips never block. Back-lean rules only fire on the way down
+(descent gating). Side-view lifts also check camera alignment
+(`Turn sideways to the camera`) and long absences show
+`Paused - no person detected` instead of silently idling.
+
+| Exercise | Rep angle | Start -> End | Key form rules |
+|----------|-----------|--------------|----------------|
+| Squat | knee | 160 -> 100 (Pro: 90) | back straight (sev 3, descending), knees over toes ≤ 0.30 (Pro: 0.25) |
+| Lunge | knee | 160 -> 100 (Pro: 90) | same as squat |
+| Push-up | elbow | 155 -> 90 | hips in line, body_line ≥ 160 (sev 3) |
+| Bicep curl | elbow | 150 -> 50 | no swing (back_lean ≤ 15), elbows tucked ≤ 0.25 |
+| Shoulder press | elbow | 100 -> 160 | no arch (back_lean ≤ 15) |
 
 ## Notes
 

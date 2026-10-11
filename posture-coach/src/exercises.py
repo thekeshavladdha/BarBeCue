@@ -11,7 +11,12 @@ logic reads metric/start_thr/end_thr/rules/view/joints from here.
   accumulated like hold. Leg shake surfaced while sitting.
 Severity: 3 injury-linked (back/hips sag), 2 depth/alignment, 1 style.
 Gate `when=(metric,op,val)`: e.g. back_lean only when knee<140 so standing
-rest never warns. Thresholds are heuristics — tune via plot_angle.py (Ch.5).
+rest never warns. Gate `phase="descending"`: rule fires only during the
+down-phase of a rep (descent-only gating, fewer false nags on ascent).
+Thresholds are heuristics — tune via plot_angle.py (Ch.5).
+Profiles: exercises may add `profiles={name: {end_thr?, start_thr?,
+rule_values?}}`; "Beginner" (empty = base behaviour) is default,
+"Pro" tightens depth/alignment. Applied by CoachState.set_profile().
 """
 from __future__ import annotations
 
@@ -29,8 +34,10 @@ EXERCISES = {
                 rules=[
                     dict(metric="back_lean", op=">", value=20,
                          msg="Sit straight", severity=2),
-                    dict(metric="neck_tilt", op=">", value=25,
+                    dict(metric="neck_tilt", op=">", value=15,
                          msg="Lift your chin", severity=2),
+                    dict(metric="head_hold", op="<", value=0.28,
+                         msg="Uncurl your upper back", severity=2),
                 ],
             ),
             "standing": dict(
@@ -40,6 +47,8 @@ EXERCISES = {
                          msg="Stand tall", severity=2),
                     dict(metric="neck_tilt", op=">", value=25,
                          msg="Lift your chin", severity=2),
+                    dict(metric="head_hold", op="<", value=0.36,
+                         msg="Uncurl your upper back", severity=2),
                 ],
             ),
         },
@@ -50,12 +59,20 @@ EXERCISES = {
         joints=["shoulder", "hip", "knee", "ankle", "foot_index"],
         rules=[
             dict(metric="back_lean", op=">", value=55,
-                 msg="Keep back straight", severity=3, when=("knee", "<", 140)),
+                 msg="Keep back straight", severity=3, when=("knee", "<", 140),
+                 phase="descending"),
             dict(metric="knee_over_toe", op=">", value=0.30,
                  msg="Knees too far forward", severity=2),
             dict(metric="neck_tilt", op=">", value=40,
                  msg="Keep chest up", severity=1),
         ],
+        # Difficulty profiles (Beginner = base behaviour, Pro = deeper +
+        # stricter). CoachState.set_profile() applies rule_values by msg and
+        # end_thr/start_thr overrides. HUD + --profile switch mid-session.
+        profiles={
+            "Beginner": dict(),
+            "Pro": dict(end_thr=90, rule_values={"Knees too far forward": 0.25}),
+        },
     ),
     "Lunge": dict(
         mode="reps", metric="knee", start_thr=160, end_thr=100,
@@ -63,10 +80,15 @@ EXERCISES = {
         joints=["shoulder", "hip", "knee", "ankle", "foot_index"],
         rules=[
             dict(metric="back_lean", op=">", value=55,
-                 msg="Keep back straight", severity=3, when=("knee", "<", 140)),
+                 msg="Keep back straight", severity=3, when=("knee", "<", 140),
+                 phase="descending"),
             dict(metric="knee_over_toe", op=">", value=0.30,
                  msg="Knees too far forward", severity=2),
         ],
+        profiles={
+            "Beginner": dict(),
+            "Pro": dict(end_thr=90, rule_values={"Knees too far forward": 0.25}),
+        },
     ),
     "Push-up": dict(
         mode="reps", metric="elbow", start_thr=155, end_thr=90,
@@ -119,6 +141,8 @@ EXERCISES = {
                  msg="Sit straight", severity=2),
             dict(metric="neck_tilt", op=">", value=25,
                  msg="Lift your chin", severity=2),
+            dict(metric="head_hold", op="<", value=0.28,
+                 msg="Uncurl your upper back", severity=2),
         ],
     ),
 }

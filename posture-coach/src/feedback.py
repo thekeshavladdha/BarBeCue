@@ -17,11 +17,15 @@ OPS = {">": operator.gt, "<": operator.lt,
        ">=": operator.ge, "<=": operator.le, "==": operator.eq}
 
 
-def raw_violations(rules: list, m: dict) -> list:
+def raw_violations(rules: list, m: dict, phase: str | None = None) -> list:
     """Instant (no debounce/hold) rule evaluation. Used for rep gating.
 
     Debounced msgs lag ~0.6s, so a fault flashing only at the bottom of a
     rep would miss the count decision. Gating uses raw state instead.
+    `phase` is the rep-cycle phase ("descending"/"ascending"/None); rules
+    with a `phase` key only fire in that phase (descent-only gating, so
+    form cues don't nag at rest or on the way up). Rules without `phase`
+    fire as before; a None phase never matches a phase-gated rule.
     """
     violated = []
     for r in rules:
@@ -30,6 +34,8 @@ def raw_violations(rules: list, m: dict) -> list:
             gm, gop, gv = gate
             if gm not in m or not OPS[gop](m[gm], gv):
                 continue
+        if r.get("phase") is not None and r["phase"] != phase:
+            continue
         if r["metric"] not in m:
             continue
         if OPS[r["op"]](m[r["metric"]], r["value"]):
@@ -43,8 +49,8 @@ class Feedback:
         self.first_seen: dict = {}
         self.last_active: dict = {}
 
-    def update(self, rules: list, m: dict, now: float) -> list:
-        violated = raw_violations(rules, m)
+    def update(self, rules: list, m: dict, now: float, phase: str | None = None) -> list:
+        violated = raw_violations(rules, m, phase)
         active = {r["msg"] for r in violated}
         for msg in list(self.first_seen):
             if msg not in active:

@@ -8,8 +8,11 @@ for whatever the body is doing right now (desk sitting vs standing).
 - LegShakeDetector: ring buffer of ankle x; flags rhythmic fidgeting
   (high zero-crossing rate + spread, low net drift) so still legs pass.
 
-Rounded shoulders are NOT claimed: forward-shoulder depth needs side-view
-3D/world landmarks (future work). back_lean + neck_tilt cover slouch/chin.
+Rounded shoulders are NOT directly claimed: no pose model ships spine
+joints, and forward-shoulder depth needs side-view 3D/world landmarks
+(future work). Slouch is instead caught two ways: back_lean + neck_tilt
+for visible lean, and the head_hold chin-drop gap (geometry.py) for
+mid-back rounding whose bend hides along a frontal camera axis.
 Thresholds are heuristics — retune on own clips, never clinical.
 """
 from __future__ import annotations

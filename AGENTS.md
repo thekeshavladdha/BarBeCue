@@ -45,14 +45,20 @@ Per-frame (`CoachState.step()`, GUI-independent and unit-testable):
 - `geometry.py`: pure functions, no camera/model/UI state. Missing landmarks → safe defaults, but callers must gate on visibility first.
 - `exercises.py`: single config center (`EXERCISES` dict). Add exercises there, never with conditionals in `app.py`.
 - `rep_counter.py`: hysteresis state machine (REST/MOVING/PEAK, separate start/end thresholds, 0.5s min interval, partial-rep events).
-- `feedback.py`: `raw_violations()` (instant, used for strict gating) vs `Feedback.update()` (debounce ~0.6s, hold ~1.5s, sort by severity, max 2 msgs).
-- Strict-form counting is default ON: any severity >= 2 fault during a cycle → `bad_rep`, not counted. Sev 1 is advisory only. `--lenient` restores depth-only counting.
+- `feedback.py`: `raw_violations()` (instant, used for strict gating) vs `Feedback.update()` (debounce ~0.6s, hold ~1.5s, sort by severity, max 2 msgs). Both accept `phase`; rules with `phase="descending"` fire mid-rep on the way down only.
+- Strict-form counting is default ON: severity >= 2 faults persisting >= 0.3s
+  (FAULT_LATCH, time-based) during a cycle → `bad_rep`, tallied in `bad_reps`
+  with `last_bad_reason` (HUD: `REPS n BAD m (<reason>)`). Sev 1 advisory only.
+  `--lenient` restores depth-only counting. `--profile Beginner/Pro` (Squat/Lunge)
+  tightens depth + knee-over-toe; `CoachState.set_profile()` resets set like `select()`.
 
 ## Conventions (follow these)
 
 - Pixel space: always convert normalized coords to pixels (`x*W, y*H`) before `angle()` — 960x540 is non-square, angles distort otherwise.
 - Visibility gate: `VIS_TH = 0.5` on exercise-required joints; on fail show `Step back so your whole body is visible`, skip counting/feedback for that frame. `foot_index` is optional for 17-pt backends.
 - Side selection: per-frame, sum vis of shoulder+hip+knee+ankle, pick more visible side. Don't hardcode left/right.
+- Camera-alignment guard (side-view exercises only): `face_offset_angle()` (nose vs shoulder midpoint) < ALIGN_MIN (20.0) → `bad_view` status (`Turn sideways to the camera`), counting skipped, drawing kept.
+- Missing person: `no_person`/`step_back` past PAUSE_AFTER (15s) → `paused` status (timers/tallies frozen, never reset).
 - Smoothing defaults: keypoint `EMA(0.5)`, angle `AngleSmoother(0.6)`. Reset all stateful filters/counter/feedback/timers/shake buffer on exercise change.
 - Skeleton: draw links only when both endpoints vis > 0.5.
 - Severity: 3 = safety, 2 = alignment/technique (blocks reps), 1 = style tip. `when` gates (e.g. squat back-lean only when flexed) avoid nagging at rest.
@@ -67,7 +73,7 @@ Per-frame (`CoachState.step()`, GUI-independent and unit-testable):
 - Don't put thresholds in `app.py`/HUD code — they belong in `EXERCISES`.
 - Don't add camera/GUI deps to `geometry.py`, `rep_counter.py`, `smoothing.py`, `exercises.py`.
 - Don't claim accuracy without clips: `data/labels.csv` is empty, bench on black frames is smoke-test only.
-- Don't commit: `*.task`, `*.mp4`, `venv/`, `__pycache__/`, `result.json`, `samples.csv`, `plot.png`, `report.pdf`, report `.docx`/`.pptx`, `posture-coach/explainer.md` (all in single root `.gitignore` — no nested ignore files).
+- Don't commit: `*.task`, `*.mp4`, `*.png`, `*.log`, `venv/`, `__pycache__/`, `result.json`, `samples.csv`, `report.pdf`, `SIDE_BY_SIDE.md`, report `.docx`/`.pptx`, `posture-coach/explainer.md` (all in single root `.gitignore` — no nested ignore files).
 
 ## Notes
 

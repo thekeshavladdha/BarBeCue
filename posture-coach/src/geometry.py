@@ -21,6 +21,7 @@ __all__ = [
     "midpoint",
     "pick_side",
     "visible_ok",
+    "face_offset_angle",
     "compute_metrics",
 ]
 
@@ -104,6 +105,36 @@ def visible_ok(kp: dict, side: str, joints, thr: float = 0.5) -> bool:
     return True
 
 
+def face_offset_angle(kp: dict) -> float | None:
+    """Profile-view score in degrees, or None if unmeasurable.
+
+    Side-view exercises (squat/lunge/push-up/plank) assume the camera sees
+    the body from the side. When the user faces the camera the nose sits
+    near the shoulder midpoint (score ~0); in profile the nose is far to
+    one side relative to the (foreshortened) shoulder width::
+
+        score = atan(|nose.x - shoulder_mid.x| / shoulder_width)
+
+    Large value = good profile view; small value = too frontal. Caller
+    warns when score < ALIGN_MIN (side-view exercises only). This mirrors
+    LearnOpenCV's camera-alignment check (their OFFSET_THRESH frontal
+    guard) adapted to pixel space. Threshold is a heuristic — tune with
+    plot_angle.py on own clips. Returns None when nose or both shoulders
+    are missing.
+    """
+    n = kp.get("nose")
+    ls, rs = kp.get("l_shoulder"), kp.get("r_shoulder")
+    if n is None or ls is None or rs is None:
+        return None
+    try:
+        mid_x = (float(ls[0]) + float(rs[0])) / 2.0
+        width = abs(float(ls[0]) - float(rs[0])) + _EPS
+        dx = abs(float(n[0]) - mid_x) / width
+        return float(np.degrees(np.arctan(dx)))
+    except Exception:
+        return None
+
+
 def _get(kp: dict, side: str, joint: str):
     """Return (x, y) for side joint or None if missing."""
     v = kp.get(f"{side}_{joint}")
@@ -138,6 +169,21 @@ def compute_metrics(kp: dict, side: str) -> dict:
     knee_over_toe: |knee.x-foot.x|/shin_len — 0 if foot_index absent (17-pt)
     elbow_drift: |elbow.x-shoulder.x|/upper_arm_len — curl isolation
     hip_sag: signed hip-to-line distance / line_len — plank
+    head_hold: (shoulder.y-ear.y)/torso_len — chin-drop detector for
+      desk/sitting. No pose model ships spine joints, so mid-back curvature
+      is unobservable directly; but a slouch always drags the head down
+      toward the chest, shrinking this gap even on a frontal laptop camera
+      where the bend itself hides along the view axis. Upright ~0.45+ on a
+      side/desk-recording setup, slouched below ~0.36 there (tuned on real
+      desk footage, 2026-10-11: upright plateaus 0.42–0.46, slouch valleys
+      0.30–0.33). NOTE: on a frontal laptop camera the ratio is near
+      scale-invariant — leaning in grows gap and torso together — so live
+      laptop sampling (same day) showed upright and slouch both ~0.30–0.38
+      and the metric cannot separate them there. Sitting/Desk therefore use
+      it only as a gross-collapse backstop (0.28) and rely on neck_tilt,
+      which separated cleanly live (upright ~10, slouch ~23). Neutral 1.0
+      when ear/shoulder/hip missing so an unseen head never counts as
+      a fault.
     """
     shoulder = _get(kp, side, "shoulder")
     hip = _get(kp, side, "hip")
@@ -160,6 +206,7 @@ def compute_metrics(kp: dict, side: str) -> dict:
         "knee": 0.0, "hip": 0.0, "elbow": 0.0, "body_line": 0.0,
         "back_lean": 0.0, "neck_tilt": 0.0,
         "knee_over_toe": 0.0, "elbow_drift": 0.0, "hip_sag": 0.0,
+        "head_hold": 1.0,  # neutral when unmeasurable: never punish unseen head
     }
 
     try:
@@ -209,6 +256,14 @@ def compute_metrics(kp: dict, side: str) -> dict:
     try:
         if shoulder and hip and ankle:
             m["hip_sag"] = _hip_sag(shoulder, hip, ankle)
+    except Exception:
+        pass
+    try:
+        # Chin-drop: slouching collapses the ear-shoulder vertical gap even
+        # when the spinal bend itself is hidden along the camera axis.
+        if ear is not None and shoulder is not None and hip is not None:
+            torso = _dist(shoulder, hip) + _EPS
+            m["head_hold"] = (float(shoulder[1]) - float(ear[1])) / torso
     except Exception:
         pass
     return m

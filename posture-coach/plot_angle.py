@@ -78,6 +78,9 @@ def _metric_available(kp: dict, side: str, metric: str, thr: float = 0.5) -> boo
         return ok(s("shoulder"), s("elbow"))
     if metric == "hip_sag":
         return ok(s("shoulder"), s("hip"), s("ankle"))
+    if metric == "head_hold":
+        head = s("ear") if s("ear") in kp else "nose"
+        return ok(s("shoulder"), s("hip")) and _vis(kp, head) >= thr
     return False
 
 

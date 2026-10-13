@@ -96,9 +96,12 @@ class MediaPipePose(PoseBackend):
         if not os.path.exists(model_path):
             raise FileNotFoundError(
                 f"[BarBeCue] pose model not found: {model_path}\n"
-                f"Download with:\n"
-                f'  curl -L -o {model_path} "{MODEL_URL_FULL}"\n'
-                f"(lite/heavy share the same URL pattern)"
+                f"Fetch it once (from the posture-coach/ folder):\n"
+                f"  python download_model.py\n"
+                f"Or with curl (PowerShell needs curl.exe, CMD/Git-Bash use curl):\n"
+                f'  curl.exe -L -o {model_path} "{MODEL_URL_FULL}"\n'
+                f"Or download in a browser and save as {model_path}:\n"
+                f"  {MODEL_URL_FULL}"
             )
         try:
             import mediapipe as mp  # noqa: F401

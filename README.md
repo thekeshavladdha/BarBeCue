@@ -28,8 +28,47 @@ stays on device.
 cd posture-coach
 py -3.11 -m venv venv; venv\Scripts\activate
 pip install -r requirements.txt
-curl.exe -L -o models/pose_landmarker_full.task "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
+python download_model.py
 ```
+
+### Model file (do this once per fresh clone)
+
+The pose model (`models/pose_landmarker_full.task`, ~9 MB) is git-ignored,
+so it never comes with `git clone` — every setup needs it once. Without it
+the app exits with `pose model not found`.
+
+- Recommended (Windows / macOS / Linux, no curl knowledge needed):
+  ```powershell
+  cd posture-coach
+  python download_model.py
+  ```
+  Expected output ends with `saved (... MB): models/pose_landmarker_full.task`.
+  Re-running is a no-op unless you pass `--force`.
+- Alternative with curl (PowerShell must use `curl.exe`, not `curl`):
+  ```powershell
+  cd posture-coach
+  curl.exe -L -o models/pose_landmarker_full.task "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/latest/pose_landmarker_full.task"
+  ```
+- Manual fallback (browser): open the URL above, save the file as
+  `posture-coach/models/pose_landmarker_full.task` (exact name, inside the
+  existing `models/` folder — create it if missing).
+
+Verify it worked:
+
+```powershell
+dir models\pose_landmarker_full.task   # ~9,398,198 bytes
+python download_model.py               # prints "exists ... nothing to do"
+```
+
+Troubleshooting:
+
+- `pose model not found` → you skipped this section, or ran the app from the
+  wrong folder (paths assume you run from `posture-coach/`).
+- `curl: not recognized` → PowerShell: use `curl.exe ...`; or just use
+  `python download_model.py` instead.
+- Truncated / 0-byte file → delete it and re-run with
+  `python download_model.py --force`.
+- Just want a smoke test without the model: `python src/app.py --backend static`.
 
 Tkinter ships with Python (not in requirements). `matplotlib` is only needed
 for `plot_angle.py` PNG output. If the camera fails, close Zoom/Meet first.
